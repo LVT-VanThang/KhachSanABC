@@ -1,7 +1,8 @@
 <?php
-// THÔNG TIN KẾT NỐI LOCALHOST (MÁY TÍNH CỦA BẠN)
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'khachsan');
+// THÔNG TIN KẾT NỐI TRÊN RAILWAY
+define('DB_HOST', getenv('mysql.railway.internal')); 
+define('DB_USER', getenv('root'));            
+define('DB_PASS', getenv('EnDGToMsQnizpMrMaDLfbNRVweYhxWCf'));        
+define('DB_NAME', getenv('railway'));
+define('DB_PORT', getenv('3306'));
 ?>
