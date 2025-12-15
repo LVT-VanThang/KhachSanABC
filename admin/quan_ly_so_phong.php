@@ -16,8 +16,18 @@ if (isset($_GET['xoa'])) {
     else echo "<script>alert('$kq'); window.location.href='quan_ly_so_phong.php';</script>";
 }
 
-// Lấy danh sách
-$result = $adminPhong->layDanhSachSoPhong();
+// --- PHẦN XỬ LÝ TÌM KIẾM ---
+// 1. Lấy dữ liệu danh mục để đổ vào Dropdown
+$dsLoaiPhong = $adminPhong->layDanhSachLoaiPhong();
+$dsTang = $adminPhong->layDanhSachTang();
+
+// 2. Nhận từ khóa từ URL (nếu người dùng bấm tìm)
+$kw = isset($_GET['kw']) ? trim($_GET['kw']) : '';
+$lid = isset($_GET['lid']) ? (int)$_GET['lid'] : 0;
+$ftang = isset($_GET['ftang']) ? (int)$_GET['ftang'] : 0;
+
+// 3. Gọi hàm lấy danh sách với tham số lọc
+$result = $adminPhong->layDanhSachSoPhong($kw, $lid, $ftang);
 ?>
 
 <main class="container page-padding">
@@ -29,6 +39,51 @@ $result = $adminPhong->layDanhSachSoPhong();
         <a href="them_so_phong.php" class="btn-big-cta"><i class="fas fa-plus"></i> Thêm phòng mới</a>
     </div>
 
+    <div class="table-card mb-20" style="padding: 20px; background: #f8f9fa;">
+        <form action="" method="GET" class="d-flex align-center" style="gap: 15px; flex-wrap: wrap;">
+            
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Số phòng:</label>
+                <input type="text" name="kw" class="form-control" placeholder="Nhập số phòng..." value="<?php echo htmlspecialchars($kw); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+
+            <div style="min-width: 200px;">
+                <label style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Loại phòng:</label>
+                <select name="lid" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="0">-- Tất cả loại --</option>
+                    <?php foreach ($dsLoaiPhong as $l): ?>
+                        <option value="<?php echo $l['id']; ?>" <?php echo ($lid == $l['id']) ? 'selected' : ''; ?>>
+                            <?php echo $l['ten_loai']; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div style="min-width: 150px;">
+                <label style="display:block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Tầng:</label>
+                <select name="ftang" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="0">-- Tất cả --</option>
+                    <?php foreach ($dsTang as $t): ?>
+                        <option value="<?php echo $t['tang']; ?>" <?php echo ($ftang == $t['tang']) ? 'selected' : ''; ?>>
+                            Tầng <?php echo $t['tang']; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div style="align-self: flex-end;">
+                <button type="submit" class="btn-orange" style="padding: 9px 20px; border: none; border-radius: 4px; color: white; cursor: pointer;">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
+                <?php if($kw != '' || $lid != 0 || $ftang != 0): ?>
+                    <a href="quan_ly_so_phong.php" class="btn-gray" style="padding: 9px 15px; text-decoration: none; border-radius: 4px; background: #ddd; color: #333; margin-left: 5px;">
+                        <i class="fas fa-undo"></i> Đặt lại
+                    </a>
+                <?php endif; ?>
+            </div>
+
+        </form>
+    </div>
     <div class="table-card">
         <table class="modern-table">
             <thead>
@@ -77,7 +132,7 @@ $result = $adminPhong->layDanhSachSoPhong();
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Chưa có dữ liệu.</td></tr>
+                    <tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Không tìm thấy phòng nào phù hợp.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
