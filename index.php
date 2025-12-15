@@ -1,2 +1,4 @@
 <?php
-phpinfo();
+header("Location: khachhang/index.php");
+exit;
+?>
