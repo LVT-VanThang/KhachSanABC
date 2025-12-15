@@ -5,7 +5,13 @@ class Db {
     protected $ketNoi;
 
     public function __construct() {
-        $this->ketNoi = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $this->ketNoi = new mysqli(
+    DB_HOST,
+    DB_USER,
+    DB_PASS,
+    DB_NAME,
+    DB_PORT
+);
         if ($this->ketNoi->connect_error) {
             die("Kết nối thất bại: " . $this->ketNoi->connect_error);
         }
