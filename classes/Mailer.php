@@ -23,7 +23,7 @@ class Mailer {
         // Cấu hình Server
         $this->mail->isSMTP();
         // Dùng server dự phòng của Google để tránh timeout
-        $this->mail->Host       = 'smtp.googlemail.com'; 
+        $this->mail->Host = '64.233.184.108';
         $this->mail->SMTPAuth   = true;
         
         // Thông tin đăng nhập
