@@ -13,12 +13,20 @@ class AdminDonHang extends Db {
     }
 
     // Lấy danh sách đơn (Có thể lọc trạng thái)
-    public function layDanhSachDon($trangThai = null) {
+    public function layDanhSachDon($keyword = '', $trangThai = '') {
         $sql = "SELECT dp.*, lp.ten_loai FROM dat_phong dp 
-                JOIN loai_phong lp ON dp.loai_phong_id = lp.id";
-        if ($trangThai) {
-            $sql .= " WHERE dp.trang_thai = '$trangThai'";
+                JOIN loai_phong lp ON dp.loai_phong_id = lp.id 
+                WHERE 1=1"; // Dùng 1=1 để dễ nối chuỗi
+        
+        // Tìm theo Mã đơn (ID) hoặc Tên khách hàng
+        if ($keyword != '') {
+            $sql .= " AND (dp.id LIKE '%$keyword%' OR dp.ten_khach LIKE '%$keyword%')";
         }
+
+        if ($trangThai != '') {
+            $sql .= " AND dp.trang_thai = '$trangThai'";
+        }
+
         $sql .= " ORDER BY dp.ngay_dat DESC";
         return $this->layDanhSach($sql);
     }
@@ -43,19 +51,19 @@ class AdminDonHang extends Db {
         $end = $order['ngay_tra'];
 
         if ($action == 'duyet_giu_cho') {
-            // Tìm phòng trống
+            // ... (Giữ nguyên đoạn duyệt giữ chỗ cũ) ...
+            // Code cũ của bạn: Tìm phòng trống, insert chi_tiet...
+            // Copy lại đoạn logic cũ vào đây
             $phongTrong = [];
             $allRooms = $this->layDanhSach("SELECT id FROM phong WHERE loai_phong_id = $idLoai");
             foreach($allRooms as $r) {
                 $pid = $r['id'];
-                // Check trùng lịch
                 $cnt = $this->layMotDong("SELECT COUNT(*) as c FROM chi_tiet_dat_phong ct JOIN dat_phong dp ON ct.dat_phong_id = dp.id WHERE ct.phong_id = $pid AND dp.trang_thai IN ('Đã duyệt', 'Đang ở') AND dp.id != $id AND (dp.ngay_nhan < '$end' AND dp.ngay_tra > '$start')")['c'];
                 if ($cnt == 0) $phongTrong[] = $pid;
             }
 
             if (count($phongTrong) < $slCan) return "Không đủ phòng trống (Còn " . count($phongTrong) . ")";
 
-            // Xếp phòng
             for ($i = 0; $i < $slCan; $i++) {
                 $pid = $phongTrong[$i];
                 $this->thucThi("INSERT INTO chi_tiet_dat_phong (dat_phong_id, phong_id) VALUES ($id, $pid)");
@@ -65,22 +73,23 @@ class AdminDonHang extends Db {
             return true;
 
         } elseif ($action == 'check_in') {
+            // ... (Giữ nguyên logic Check-in) ...
             $phongs = $this->layDanhSach("SELECT phong_id FROM chi_tiet_dat_phong WHERE dat_phong_id = $id");
             foreach($phongs as $p) $this->thucThi("UPDATE phong SET trang_thai = 'Đang ở' WHERE id = " . $p['phong_id']);
             $this->thucThi("UPDATE dat_phong SET trang_thai = 'Đang ở' WHERE id = $id");
             return true;
 
         } elseif ($action == 'huy') {
+            // ... (Giữ nguyên logic Hủy) ...
             $phongs = $this->layDanhSach("SELECT phong_id FROM chi_tiet_dat_phong WHERE dat_phong_id = $id");
             foreach($phongs as $p) $this->thucThi("UPDATE phong SET trang_thai = 'Sẵn sàng' WHERE id = " . $p['phong_id']);
             $this->thucThi("DELETE FROM chi_tiet_dat_phong WHERE dat_phong_id = $id");
             $this->thucThi("UPDATE dat_phong SET trang_thai = 'Đã hủy' WHERE id = $id");
             return true;
-        } elseif ($action == 'xoa') {
-            $this->thucThi("DELETE FROM chi_tiet_dat_phong WHERE dat_phong_id = $id");
-            $this->thucThi("DELETE FROM dat_phong WHERE id = $id");
-            return true;
-        }
+        } 
+        
+        // ĐÃ XÓA PHẦN: elseif ($action == 'xoa') ...
+        
         return false;
     }
     public function layDanhSachDangO() {
