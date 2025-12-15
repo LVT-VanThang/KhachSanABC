@@ -6,8 +6,12 @@ class Mailer {
     private $apiEndpoint = 'https://api.brevo.com/v3/smtp/email';
 
     public function __construct() {
-        // 👇 DÁN CÁI API KEY (xkeysib-...) BẠN VỪA COPY VÀO ĐÂY
-        $this->apiKey = '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'; 
+        $this->apiKey = getenv('BREVO_API_KEY'); 
+
+        // Kiểm tra nếu quên chưa cài đặt biến (để debug)
+        if (!$this->apiKey) {
+            error_log("LỖI: Chưa cấu hình biến môi trường BREVO_API_KEY trên Railway!");
+        }
     }
 
     public function guiEmailThanhToan($emailKhach, $tenKhach, $data) {
