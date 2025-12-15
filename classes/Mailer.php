@@ -4,7 +4,6 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Điều chỉnh đường dẫn require tùy theo cấu trúc thư mục thực tế của bạn
 require_once __DIR__ . '/../includes/PHPMailer/Exception.php';
 require_once __DIR__ . '/../includes/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../includes/PHPMailer/SMTP.php';
@@ -14,20 +13,34 @@ class Mailer {
 
     public function __construct() {
         $this->mail = new PHPMailer(true);
-        // Cấu hình chung
+        
+        // --- CẤU HÌNH SMTP CHO GMAIL ---
         $this->mail->isSMTP();
         $this->mail->Host       = 'smtp.gmail.com';
         $this->mail->SMTPAuth   = true;
-        $this->mail->Username   = 'thangkkt112@gmail.com'; // <--- Email của bạn
-        $this->mail->Password   = 'biwj mgak rwch ecmp';     // <--- App Password
-        $this->mail->SMTPSecure = 'ssl';
-        $this->mail->Port       = 465;
+        
+        // Thay email và mật khẩu ứng dụng MỚI của bạn vào đây
+        $this->mail->Username   = 'thangkkt112@gmail.com'; 
+        $this->mail->Password   = 'biwj mgak rwch ecmp'; 
+
+        // QUAN TRỌNG: Đổi sang TLS và Port 587 để tránh bị chặn trên Railway
+        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Hoặc dùng chuỗi 'tls'
+        $this->mail->Port       = 587; 
+        
         $this->mail->CharSet    = 'UTF-8';
         $this->mail->setFrom('thangkkt112@gmail.com', 'Khách sạn ABC Luxury');
+
+        // Tăng thời gian chờ kết nối (mặc định là rất ngắn)
+        $this->mail->Timeout = 30; // 30 giây
     }
 
     public function guiEmailThanhToan($emailKhach, $tenKhach, $data) {
+        // Tăng thời gian thực thi của PHP cho tiến trình gửi mail này
+        // Vì gửi mail tốn thời gian, tránh lỗi "Maximum execution time"
+        set_time_limit(120); 
+
         try {
+            $this->mail->clearAddresses(); // Xóa địa chỉ cũ nếu dùng lại object
             $this->mail->addAddress($emailKhach, $tenKhach);
             $this->mail->isHTML(true);
             $this->mail->Subject = "Thanh toán thành công - Mã đơn #" . $data['ma_don'];
@@ -65,7 +78,8 @@ class Mailer {
             $this->mail->send();
             return true;
         } catch (Exception $e) {
-            // Có thể log lỗi tại đây nếu muốn
+            // Log lỗi ra file log của Railway để kiểm tra
+            error_log("MAILER ERROR: " . $this->mail->ErrorInfo);
             return "Lỗi Mailer: " . $this->mail->ErrorInfo;
         }
     }
