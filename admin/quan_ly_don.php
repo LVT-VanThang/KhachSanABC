@@ -12,17 +12,25 @@ include '../includes/headeradmin.php';
 
 // Xử lý hành động (Duyệt, Hủy, Check-in...)
 if (isset($_GET['action']) && isset($_GET['id'])) {
-    $ketQua = $adminDon->xuLyTrangThai($_GET['id'], $_GET['action']);
-    if ($ketQua === true) {
-        echo "<script>alert('Thao tác thành công!'); window.location.href='quan_ly_don.php';</script>";
-    } elseif ($ketQua !== false) {
-        echo "<script>alert('$ketQua'); window.location.href='quan_ly_don.php';</script>";
+    // Chặn hành động xóa nếu người dùng cố tình nhập URL
+    if ($_GET['action'] == 'xoa') {
+        echo "<script>alert('Chức năng xóa đã bị vô hiệu hóa!'); window.location.href='quan_ly_don.php';</script>";
+    } else {
+        $ketQua = $adminDon->xuLyTrangThai($_GET['id'], $_GET['action']);
+        if ($ketQua === true) {
+            echo "<script>alert('Thao tác thành công!'); window.location.href='quan_ly_don.php';</script>";
+        } elseif ($ketQua !== false) {
+            echo "<script>alert('$ketQua'); window.location.href='quan_ly_don.php';</script>";
+        }
     }
 }
 
-// Lấy thống kê & Danh sách
+// --- XỬ LÝ TÌM KIẾM ---
+$kw = isset($_GET['kw']) ? trim($_GET['kw']) : '';
+
+// Lấy thống kê & Danh sách (có lọc theo từ khóa)
 $stats = $adminDon->layThongKe();
-$danhSachDon = $adminDon->layDanhSachDon();
+$danhSachDon = $adminDon->layDanhSachDon($kw);
 ?>
 
 <main class="container page-padding">
@@ -40,6 +48,26 @@ $danhSachDon = $adminDon->layDanhSachDon();
             <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
             <div class="stat-info"><h3><?php echo $stats['da_giu_cho']; ?></h3><p>Đã giữ chỗ</p></div>
         </div>
+    </div>
+
+    <div class="table-card mb-20" style="padding: 20px; background: #fff; border-bottom: 1px solid #eee;">
+        <form action="" method="GET" class="d-flex align-center" style="gap: 10px;">
+            <div style="flex: 1; max-width: 400px; position: relative;">
+                <input type="text" name="kw" class="form-control" 
+                       placeholder="Nhập Mã đơn (ID) hoặc Tên khách..." 
+                       value="<?php echo htmlspecialchars($kw); ?>" 
+                       style="width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px;">
+                <button type="submit" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #666; cursor: pointer;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <?php if($kw != ''): ?>
+                <a href="quan_ly_don.php" class="btn btn-sm btn-outline" style="border-radius: 20px;">
+                    <i class="fas fa-times"></i> Xóa lọc
+                </a>
+            <?php endif; ?>
+        </form>
     </div>
 
     <div class="table-card">
@@ -65,11 +93,10 @@ $danhSachDon = $adminDon->layDanhSachDon();
                     <?php if (!empty($danhSachDon)): ?>
                         <?php foreach($danhSachDon as $row): 
                             $idDon = $row['id'];
-                            // Gọi hàm lấy số phòng đã xếp từ Class
                             $dsPhong = $adminDon->layPhongCuaDon($idDon);
                         ?>
                             <tr>
-                                <td>#<?php echo $row['id']; ?></td>
+                                <td><b>#<?php echo $row['id']; ?></b></td>
                                 <td>
                                     <b><?php echo htmlspecialchars($row['ten_khach']); ?></b><br>
                                     <small class="text-muted"><?php echo $row['sdt_khach']; ?></small>
@@ -97,6 +124,7 @@ $danhSachDon = $adminDon->layDanhSachDon();
                                         elseif ($st == 'Đã đặt') echo '<span class="badge badge-info">Đã đặt</span>';
                                         elseif ($st == 'Đang ở') echo '<span class="badge badge-danger">Đang ở</span>';
                                         elseif ($st == 'Đã trả') echo '<span class="badge badge-success">Hoàn thành</span>';
+                                        elseif ($st == 'Đã hủy') echo '<span class="badge badge-gray" style="background:#eee; color:#999;">Đã hủy</span>';
                                         else echo '<span class="badge badge-gray">' . $st . '</span>';
                                     ?>
                                 </td>
@@ -110,13 +138,12 @@ $danhSachDon = $adminDon->layDanhSachDon();
                                         <a href="?action=check_in&id=<?php echo $row['id']; ?>" class="action-btn btn-blue" title="Check-in" onclick="return confirm('Khách đến nhận phòng?')"><i class="fas fa-key"></i></a>
                                         <a href="?action=huy&id=<?php echo $row['id']; ?>" class="action-btn btn-orange" title="Hủy" onclick="return confirm('Hủy đơn?')"><i class="fas fa-times"></i></a>
                                     <?php endif; ?>
-
-                                    <a href="?action=xoa&id=<?php echo $row['id']; ?>" class="action-btn btn-red" title="Xóa" onclick="return confirm('Xóa vĩnh viễn?')"><i class="fas fa-trash"></i></a>
-                                </td>
+                                    
+                                    </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="7" class="text-center" style="padding:30px;">Chưa có đơn hàng nào.</td></tr>
+                        <tr><td colspan="7" class="text-center" style="padding:30px;">Không tìm thấy đơn hàng nào.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
