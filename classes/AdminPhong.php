@@ -59,11 +59,36 @@ class AdminPhong extends Db {
     }
 
     // --- QUẢN LÝ SỐ PHÒNG (Room Number) ---
-    public function layDanhSachSoPhong() {
+    public function layDanhSachSoPhong($keyword = '', $loaiId = 0, $tang = 0) {
+        $keyword = $this->lamSachChuoi($keyword);
+        $loaiId = (int)$loaiId;
+        $tang = (int)$tang;
+
+        // Câu lệnh gốc
         $sql = "SELECT p.id, p.so_phong, p.tang, p.trang_thai, lp.ten_loai 
                 FROM phong p JOIN loai_phong lp ON p.loai_phong_id = lp.id 
-                ORDER BY p.so_phong ASC";
+                WHERE 1=1"; // Mẹo WHERE 1=1 để dễ nối chuỗi AND
+
+        // Thêm điều kiện nếu có dữ liệu tìm kiếm
+        if (!empty($keyword)) {
+            $sql .= " AND p.so_phong LIKE '%$keyword%'";
+        }
+
+        if ($loaiId > 0) {
+            $sql .= " AND p.loai_phong_id = $loaiId";
+        }
+
+        if ($tang > 0) {
+            $sql .= " AND p.tang = $tang";
+        }
+
+        $sql .= " ORDER BY p.tang ASC, p.so_phong ASC";
+
         return $this->layDanhSach($sql);
+    }
+    public function layDanhSachTang() {
+        // Lấy các tầng duy nhất, sắp xếp tăng dần
+        return $this->layDanhSach("SELECT DISTINCT tang FROM phong ORDER BY tang ASC");
     }
 
     public function xoaSoPhong($id) {
