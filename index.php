@@ -1,4 +1,3 @@
 <?php
-header("Location: khachhang/index.php");
+header("Location: /khachhang/");
 exit;
-?>
