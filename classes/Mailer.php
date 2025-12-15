@@ -3,7 +3,6 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use PHPMailer\PHPMailer\SMTP; // Thêm dòng này để dùng hằng số SMTP
 
 require_once __DIR__ . '/../includes/PHPMailer/Exception.php';
 require_once __DIR__ . '/../includes/PHPMailer/PHPMailer.php';
@@ -14,27 +13,29 @@ class Mailer {
 
     public function __construct() {
         $this->mail = new PHPMailer(true);
-        
-        // --- BẬT CHẾ ĐỘ DEBUG ĐỂ XEM LỖI CHI TIẾT TRÊN RAILWAY LOGS ---
-        // 0 = Tắt, 2 = Hiện Client/Server message
-        $this->mail->SMTPDebug = 2; 
-        $this->mail->Debugoutput = 'error_log'; // Ghi lỗi vào Logs thay vì hiện ra màn hình
-
-        // Cấu hình Server
         $this->mail->isSMTP();
-        // Dùng server dự phòng của Google để tránh timeout
-        $this->mail->Host = '64.233.184.108';
+        $this->mail->CharSet    = 'UTF-8';
+        $this->mail->SMTPDebug  = 0; // Tắt debug cho gọn
+        
+        // --- CẤU HÌNH BREVO (CHUẨN KHÔNG CẦN CHỈNH) ---
+        $this->mail->Host       = 'smtp-relay.brevo.com'; 
         $this->mail->SMTPAuth   = true;
+        $this->mail->Port       = 587;
+        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+
+        // 👇 1. ĐIỀN EMAIL ĐĂNG NHẬP BREVO CỦA BẠN VÀO ĐÂY (VD: abc@gmail.com)
+        $this->mail->Username   = 'luongvanthang1301@gmail.com'; 
         
-        // Thông tin đăng nhập
-        $this->mail->Username   = 'thangkkt112@gmail.com'; 
-        $this->mail->Password   = 'biwj mgak rwch ecmp'; // Mật khẩu ứng dụng của bạn
+        // 👇 2. DÁN CÁI MÃ KHÓA DÀI NGOẰNG VỪA COPY VÀO ĐÂY
+        $this->mail->Password   = 'xsmtpsib-4cc221885652138ab53319344d265d21716c23904d7ac3cab02b4f36448a6dcf-HoS7vAvzBmN44lF5'; 
+
+
         
-        // Cấu hình mã hóa & Cổng
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
-        $this->mail->Port       = 587; 
+        // 👇 3. QUAN TRỌNG: Email người gửi PHẢI TRÙNG với email đăng nhập Brevo
+        $emailGui = 'luongvanthang1301@gmail.com'; 
+        $this->mail->setFrom($emailGui, 'Khách sạn ABC Luxury');
         
-        // Bỏ qua kiểm tra chứng chỉ SSL (Fix lỗi kết nối trên Cloud)
+        // Fix lỗi SSL trên Railway
         $this->mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer' => false,
@@ -42,54 +43,76 @@ class Mailer {
                 'allow_self_signed' => true
             )
         );
-
-        // Tăng thời gian chờ lên 60 giây cho chắc chắn
-        $this->mail->Timeout = 60;
-        
-        $this->mail->CharSet    = 'UTF-8';
-        $this->mail->setFrom('thangkkt112@gmail.com', 'Khách sạn ABC Luxury');
     }
 
-    public function guiEmailThanhToan($emailKhach, $tenKhach, $data) {
+   public function guiEmailThanhToan($emailKhach, $tenKhach, $data) {
         set_time_limit(120); 
-
         try {
             $this->mail->clearAddresses();
             $this->mail->addAddress($emailKhach, $tenKhach);
             $this->mail->isHTML(true);
             $this->mail->Subject = "Thanh toán thành công - Mã đơn #" . $data['ma_don'];
 
-            // Format tiền tệ và ngày tháng
+            // 1. Tính toán số liệu
             $tong = number_format($data['tong_tien']);
             $coc = number_format($data['tien_coc']);
-            $conLai = number_format($data['tong_tien'] - $data['tien_coc']);
-            $in = date('d/m/Y', strtotime($data['ngay_nhan']));
-            $out = date('d/m/Y', strtotime($data['ngay_tra']));
+            
+            // Tính số tiền còn lại cần thanh toán
+            $soTienConLai = $data['tong_tien'] - $data['tien_coc'];
+            $conLai = number_format($soTienConLai);
 
+            // Format ngày tháng (Giả sử dữ liệu vào là Y-m-d)
+            $ngayNhan = date('d/m/Y', strtotime($data['ngay_nhan']));
+            $ngayTra = date('d/m/Y', strtotime($data['ngay_tra']));
+
+            // 2. Nội dung Email chi tiết
             $body = "
-                <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
-                    <h2 style='color: #27ae60;'>Thanh toán thành công!</h2>
-                    <p>Xin chào <strong>$tenKhach</strong>,</p>
-                    <p>Chúng tôi xác nhận đã nhận được khoản thanh toán cọc của bạn.</p>
-                    <ul style='background: #f9f9f9; padding: 15px; border-radius: 5px; list-style: none;'>
-                        <li><strong>Mã đơn:</strong> #{$data['ma_don']}</li>
-                        <li><strong>Loại phòng:</strong> {$data['loai_phong']}</li>
-                        <li><strong>Phòng:</strong> <span style='color: blue; font-weight: bold;'>{$data['so_phong']}</span></li>
-                        <li><strong>Ngày nhận:</strong> $in - <strong>Ngày trả:</strong> $out</li>
-                        <li><strong>Tổng tiền:</strong> $tong VNĐ</li>
-                        <li><strong>Đã cọc:</strong> <span style='color: green;'>$coc VNĐ</span></li>
-                    </ul>
-                    <p>Số tiền còn lại: <strong style='color: red;'>$conLai VNĐ</strong></p>
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>
+                    <div style='background-color: #27ae60; color: #fff; padding: 20px; text-align: center;'>
+                        <h2 style='margin: 0;'>THANH TOÁN THÀNH CÔNG</h2>
+                    </div>
+                    
+                    <div style='padding: 20px;'>
+                        <p>Xin chào <strong>$tenKhach</strong>,</p>
+                        <p>Cảm ơn bạn đã đặt phòng tại ABC Luxury. Chúng tôi xác nhận đã nhận được khoản đặt cọc của bạn.</p>
+                        
+                        <table style='width: 100%; border-collapse: collapse; margin-top: 15px;'>
+                            <tr style='background-color: #f9f9f9;'>
+                                <td style='padding: 10px; border: 1px solid #ddd;'><strong>Mã đơn hàng:</strong></td>
+                                <td style='padding: 10px; border: 1px solid #ddd; color: #333;'>#{$data['ma_don']}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 10px; border: 1px solid #ddd;'><strong>Loại phòng:</strong></td>
+                                <td style='padding: 10px; border: 1px solid #ddd;'>{$data['loai_phong']}</td>
+                            </tr>
+                            <tr style='background-color: #f9f9f9;'>
+                                <td style='padding: 10px; border: 1px solid #ddd;'><strong>Phòng số:</strong></td>
+                                <td style='padding: 10px; border: 1px solid #ddd; color: #0056b3; font-weight: bold;'>{$data['so_phong']}</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 10px; border: 1px solid #ddd;'><strong>Thời gian:</strong></td>
+                                <td style='padding: 10px; border: 1px solid #ddd;'>$ngayNhan - $ngayTra</td>
+                            </tr>
+                        </table>
+
+                        <br>
+                        <div style='background-color: #fff8e1; padding: 15px; border: 1px solid #ffecb3; border-radius: 5px;'>
+                            <p style='margin: 5px 0;'>💰 <strong>Tổng tiền:</strong> $tong VNĐ</p>
+                            <p style='margin: 5px 0; color: #27ae60;'>✅ <strong>Đã đặt cọc:</strong> $coc VNĐ</p>
+                            <p style='margin: 5px 0; color: #c0392b; font-size: 16px;'>❗ <strong>Cần thanh toán tại quầy: $conLai VNĐ</strong></p>
+                        </div>
+
+                        <p style='margin-top: 20px; font-size: 13px; color: #777;'>Nếu có thắc mắc, vui lòng liên hệ hotline: 0123.456.789</p>
+                    </div>
                 </div>
             ";
-
+            
             $this->mail->Body = $body;
             $this->mail->send();
             return true;
         } catch (Exception $e) {
-            // Lỗi chi tiết sẽ được ghi vào Log nhờ SMTPDebug = 2 ở trên
-            error_log("MAILER ERROR FINAL: " . $this->mail->ErrorInfo);
-            return "Lỗi: " . $this->mail->ErrorInfo;
+            error_log("MAIL ERROR: " . $this->mail->ErrorInfo);
+            return "Lỗi gửi mail: " . $this->mail->ErrorInfo;
         }
     }
 }
