@@ -1,4 +1,4 @@
 <?php
-header("Location: /khachhang/lien_he.php");
+header("Location: /khachhang/index.php");
 exit;
 ?>
