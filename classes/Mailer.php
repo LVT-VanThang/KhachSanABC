@@ -14,24 +14,35 @@ class Mailer {
     public function __construct() {
         $this->mail = new PHPMailer(true);
         
-        // --- CẤU HÌNH SMTP CHO GMAIL ---
+        // Cấu hình Server
         $this->mail->isSMTP();
-        $this->mail->Host       = 'smtp.gmail.com';
+        // Mẹo: Dùng hàm gethostbyname để ép về IPv4, tránh lỗi IPv6 timeout
+        $this->mail->Host       = gethostbyname('smtp.gmail.com'); 
         $this->mail->SMTPAuth   = true;
         
-        // Thay email và mật khẩu ứng dụng MỚI của bạn vào đây
+        // Thông tin đăng nhập
         $this->mail->Username   = 'thangkkt112@gmail.com'; 
-        $this->mail->Password   = 'biwj mgak rwch ecmp'; 
-
-        // QUAN TRỌNG: Đổi sang TLS và Port 587 để tránh bị chặn trên Railway
-        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Hoặc dùng chuỗi 'tls'
+        $this->mail->Password   = 'biwj mgak rwch ecmp'; // Nhớ thay mật khẩu mới
+        
+        // --- CẤU HÌNH QUAN TRỌNG ĐỂ SỬA LỖI 110 ---
+        // 1. Dùng TLS cổng 587 (Thay vì SSL 465)
+        $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
         $this->mail->Port       = 587; 
+        
+        // 2. Bỏ qua kiểm tra chứng chỉ SSL (Giúp server kết nối nhanh hơn và không bị chặn)
+        $this->mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+
+        // 3. Tăng thời gian chờ (Timeout) lên 30 giây
+        $this->mail->Timeout = 30;
         
         $this->mail->CharSet    = 'UTF-8';
         $this->mail->setFrom('thangkkt112@gmail.com', 'Khách sạn ABC Luxury');
-
-        // Tăng thời gian chờ kết nối (mặc định là rất ngắn)
-        $this->mail->Timeout = 30; // 30 giây
     }
 
     public function guiEmailThanhToan($emailKhach, $tenKhach, $data) {
