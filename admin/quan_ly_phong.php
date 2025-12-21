@@ -62,6 +62,7 @@ $danhSach = $adminPhong->layDanhSachLoaiPhong();
                     <td><span class="badge badge-info"><?php echo $row['tong']; ?> phòng</span></td>
                     <td>
                         <?php if($busy): ?>
+                            <span class="action-btn btn-gray"><i class="fas fa-edit"></i></span>
                             <span class="action-btn btn-gray"><i class="fas fa-trash"></i></span>
                         <?php else: ?>
                             <a href="them_sua_phong.php?id=<?php echo $row['id']; ?>" class="action-btn btn-orange"><i class="fas fa-edit"></i></a>
