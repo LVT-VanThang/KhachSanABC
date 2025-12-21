@@ -38,14 +38,21 @@ $danhSachLoai = $loaiPhongObj->timKiemPhong($boLoc);
                     <label>Ngày trả:</label>
                     <input type="date" name="checkout" id="checkout" value="<?php echo $checkout; ?>" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
                 </div>
-
+                <div class="input-item">
+                    <label>Số giường:</label>
+                    <select name="so_giuong">
+                        <option value="all">Tất cả</option>
+                        <option value="1" <?php if($soGiuong == 1) echo 'selected'; ?>>1</option>
+                        <option value="2" <?php if($soGiuong == 2) echo 'selected'; ?>>2</option>
+                    </select>
+                </div>
                 <div class="input-item">
                     <label>Số người:</label>
                     <select name="suc_chua">
                         <option value="all">Tất cả</option>
-                        <option value="1" <?php if($sucChua == 1) echo 'selected'; ?>>1+</option>
-                        <option value="2" <?php if($sucChua == 2) echo 'selected'; ?>>2+</option>
-                        <option value="4" <?php if($sucChua == 4) echo 'selected'; ?>>4+</option>
+                        <option value="1" <?php if($sucChua == 1) echo 'selected'; ?>>1</option>
+                        <option value="2" <?php if($sucChua == 2) echo 'selected'; ?>>2</option>
+                        <option value="4" <?php if($sucChua == 4) echo 'selected'; ?>>4</option>
                     </select>
                 </div>
 
