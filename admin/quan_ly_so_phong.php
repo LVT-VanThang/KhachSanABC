@@ -121,13 +121,14 @@ $result = $adminPhong->layDanhSachSoPhong($kw, $lid, $ftang);
                         </td>
                         <td>
                             <div class="action-group">
-                                <a href="them_so_phong.php?id=<?php echo $row['id']; ?>" class="action-btn btn-orange" title="Sửa"><i class="fas fa-edit"></i></a>
-                                <?php if ($row['trang_thai'] == 'Đang ở'): ?>
-                                    <span class="action-btn btn-gray" title="Đang có khách"><i class="fas fa-trash"></i></span>
-                                <?php else: ?>
-                                    <a href="quan_ly_so_phong.php?xoa=<?php echo $row['id']; ?>" class="action-btn btn-red" title="Xóa" onclick="return confirm('Xóa phòng <?php echo $row['so_phong']; ?>?')"><i class="fas fa-trash"></i></a>
-                                <?php endif; ?>
-                            </div>
+    <?php if ($row['trang_thai'] == 'Đang ở'): ?>
+        <span class="action-btn btn-gray" title="Đang có khách, không thể sửa"><i class="fas fa-edit"></i></span>
+        <span class="action-btn btn-gray" title="Đang có khách, không thể xóa"><i class="fas fa-trash"></i></span>
+    <?php else: ?>
+        <a href="them_so_phong.php?id=<?php echo $row['id']; ?>" class="action-btn btn-orange" title="Sửa"><i class="fas fa-edit"></i></a>
+        <a href="quan_ly_so_phong.php?xoa=<?php echo $row['id']; ?>" class="action-btn btn-red" title="Xóa" onclick="return confirm('Xóa phòng <?php echo $row['so_phong']; ?>?')"><i class="fas fa-trash"></i></a>
+    <?php endif; ?>
+</div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
