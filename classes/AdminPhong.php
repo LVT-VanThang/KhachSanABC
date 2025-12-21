@@ -117,6 +117,10 @@ class AdminPhong extends Db {
         if ($this->layMotDong($sqlCheck)['c'] > 0) return "Số phòng đã tồn tại!";
 
         if ($id > 0) {
+            $current = $this->layMotDong("SELECT trang_thai FROM phong WHERE id = $id");
+             if ($current && $current['trang_thai'] == 'Đang ở') {
+                 return "Phòng đang có khách, không thể thay đổi thông tin!";
+                 }
             $sql = "UPDATE phong SET so_phong='$so', loai_phong_id='$loai', tang='$tang', trang_thai='$tt' WHERE id=$id";
         } else {
             $sql = "INSERT INTO phong (so_phong, loai_phong_id, tang, trang_thai) VALUES ('$so', '$loai', '$tang', '$tt')";
