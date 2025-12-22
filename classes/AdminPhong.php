@@ -175,7 +175,7 @@ class AdminPhong extends Db {
     if ($keyword) $sql .= " AND p.so_phong LIKE '%$keyword%'";
     if ($loaiId) $sql .= " AND p.loai_phong_id = $loaiId";
     
-    $sql .= " ORDER BY lp.ten_loai ASC, p.so_phong ASC";
+    $sql .= " ORDER BY p.so_phong ASC";
     
     return $this->layDanhSach($sql);
 }
