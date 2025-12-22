@@ -18,7 +18,7 @@ include '../includes/headeradmin.php';
 // =================================================================================
 // 4. CẤU HÌNH TIMELINE (14 NGÀY) - Logic PHP giữ nguyên
 // =================================================================================
-$soNgayHienThi = 14;
+$soNgayHienThi = 21;
 $homNay = date('Y-m-d');
 $dsNgay = [];
 for ($i = 0; $i < $soNgayHienThi; $i++) {
